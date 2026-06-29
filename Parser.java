@@ -56,7 +56,8 @@ public class Parser {
             advance();
         }
         else{
-            error(token, "token tipo:"+t);
+            //cambiamos para que muestre el nombre del token en vez de token:2
+            error(token, nombreToken(t));
         }
     }
     
@@ -64,7 +65,21 @@ public class Parser {
         Declarax d = D();
         createTable();
         Statx s = S();
-        
+
+        //Nuevo para la mejora 5: Mandar como mensaje lo de "Parte extra del programa encontrada".
+        if(!this.s.finArchivo()){
+
+            String mensaje =
+                    "\nParte extra del programa encontrada.\n"
+                    + "Código no procesado:\n" + this.s.codigoRestante();
+            System.out.println(mensaje);
+
+            JOptionPane.showMessageDialog(
+                    null,
+                    mensaje,
+                    "Advertencia",
+                    JOptionPane.WARNING_MESSAGE);
+        }
         return new Programax(tablaSimbolos,s);
     }
     
@@ -72,8 +87,12 @@ public class Parser {
       if(tknCode == id) {
         if(stringToCode(s.getToken(false)) == intx || stringToCode(s.getToken(false)) == floatx) {
           String s = token;
-          eat(id); Typex t = T(); eat(semi); D();
+          eat(id); 
+          Typex t = T(); 
+          eat(semi); 
+          //Mejora 4: Acomodar bien la tabla de símbolos porque estan alrevez.
           tablaSimbolos.addElement(new Declarax(s, t));
+          D();
           return new Declarax(s, t);
         }
         else{return null;}
@@ -189,9 +208,13 @@ public class Parser {
        }
     } //FIN DEL ANÁLISIS SINTÁCTICO
     
-    
-    
+    //Mejora 3: Mostrar errores también en consola.
     public void error(String token, String t) {
+        String mensaje = "Error sintáctico:\n"
+                + "El token:("+ token + ") no concuerda con la gramática del lenguaje,\n"
+                + "se espera: " + t + ".\n";
+        System.out.println(mensaje);
+
         switch(JOptionPane.showConfirmDialog(null,
                 "Error sintáctico:\n"
                         + "El token:("+ token + ") no concuerda con la gramática del lenguaje,\n"
@@ -212,22 +235,57 @@ public class Parser {
     public int stringToCode(String t) {
         int codigo = 0;
         switch(t) {
-            case "if": codigo=1; break;    
-            case "then": codigo=2; break;
-            case "else": codigo=3; break;
-            case "begin": codigo=4; break;
-            case "end": codigo=5; break;
-            case "print": codigo=6; break;
-            case ";": codigo=7; break;
-            case "+": codigo=8; break;
-            case ":=": codigo=9; break;
-            case "==": codigo=10; break;
-            case "int": codigo=11; break;
-            case "float": codigo=12; break;
-            default: codigo=13; break;
+            case "if": codigo=ifx; break;    
+            case "then": codigo=thenx; break;
+            case "else": codigo=elsex; break;
+            case "begin": codigo=beginx; break;
+            case "end": codigo=endx; break;
+            case "print": codigo=printx; break;
+            case ";": codigo=semi; break;
+            case "+": codigo=sum; break;
+            case ":=": codigo=igual; break;
+            case "==": codigo=igualdad; break;
+            case "int": codigo=intx; break;
+            case "float": codigo=floatx; break;
+            default: codigo=id; break;
         }
         return codigo;
     }
+    //Mejora 2: Corregir mensajes de error 
+    // (mostrar el nombre del token como lo explico en clase en vez de token:2).
+    private String nombreToken(int codigo){
+        switch(codigo){
+            case ifx:
+                return "if";
+            case thenx:
+                return "then";
+            case elsex:
+                return "else";
+            case beginx:
+                return "begin";
+            case endx:
+                return "end";
+            case printx:
+                return "print";
+            case semi:
+                return ";";
+            case sum:
+                return "+";
+            case igual:
+                return ":=";
+            case igualdad:
+                return "==";
+            case intx:
+                return "int";
+            case floatx:
+                return "float";
+            case id:
+                return "identificador";
+            default:
+                return "desconocido";
+        }
+}
+
     
     //Métodos para recoger la información de los tokens para luego mostrarla
     public void setLog(String l) {
@@ -264,8 +322,8 @@ public class Parser {
             System.out.println(variable[i] + ": "+ tipo[i]); //Imprime tabla de símbolos por consola.
         }
         
-        ArrayUtils.reverse(variable);
-        ArrayUtils.reverse(tipo);
+       ArrayUtils.reverse(variable);
+       ArrayUtils.reverse(tipo);
         
         System.out.println("-----------------\n");
     }

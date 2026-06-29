@@ -5,45 +5,51 @@
 import javax.swing.JOptionPane;
 
 public class Scanner {
-    
-//DECLARACIONES
+
+    // DECLARACIONES
     private int lineaNo, k;
     private final String[] tokens;
     private String tipoToken;
     private String token;
-    private final String[] reservadas = {"if", "then", "else", "begin", "print", "end", "int", "float"};
-    private final String[] operadores = {"==", ":=", "+"};
+    private final String[] reservadas = { "if", "then", "else", "begin", "print", "end", "int", "float" };
+    private final String[] operadores = { "==", ":=", "+" };
     private final String delimitador = ";";
 
+    // main
 
-//main 
+    /*
+     * public static void main(String[] args){
+     * System.out.println("hello");
+     * 
+     * new Scanner("codigo texto de prueba");
+     * }
+     */
 
-/*public static void main(String[] args){
-    System.out.println("hello");
-
-    new Scanner("codigo texto de prueba");
-}*/
-    
-//CONSTRUCTOR
+    // CONSTRUCTOR
     public Scanner(String codigo) {
         tokens = codigo.split("\\s+");
-        lineaNo = 0; //Aun sin implementar...
-        k=0;
+        lineaNo = 0; // Aun sin implementar...
+        k = 0;
         token = "";
     }
-    
-//MÉTODO que retorna tokens válidos al parser
+
+    // MÉTODO que retorna tokens válidos al parser
     public String getToken(boolean b) {
         boolean tokenValido = false;
-        token = tokens[k];
-        if(b) {
-            if(k < tokens.length-1) {
-            k++;
-            }
+
+        // Si ya no hay más tokens, regresar EOF
+        if (k >= tokens.length) {
+            return "<EOF>";
         }
-                
-        //VERIFICACIÓN LÉXICA
-        //Palabras reservadas:
+        token = tokens[k];
+        
+        // Avanzar al siguiente token
+        if (b && k < tokens.length) {
+            k++;
+        }
+
+        // VERIFICACIÓN LÉXICA
+        // Palabras reservadas:
         for (String reservada : reservadas) {
             if (token.equalsIgnoreCase(reservada)) {
                 tokenValido = true;
@@ -51,84 +57,86 @@ public class Scanner {
                 break;
             }
         }
-            //Operadores:
-        if(!tokenValido) {
-            for(String operador : operadores) {
-                if(token.equals(operador)) {
+        // Operadores:
+        if (!tokenValido) {
+            for (String operador : operadores) {
+                if (token.equals(operador)) {
                     tokenValido = true;
                     setTipoToken("Operador", b);
                     break;
                 }
             }
         }
-            //Delimitador:
-        if(!tokenValido) {
-            if(token.equals(delimitador)) {
+        // Delimitador:
+        if (!tokenValido) {
+            if (token.equals(delimitador)) {
                 tokenValido = true;
                 setTipoToken("Delimitador", b);
             }
         }
-        
-            //Identificadores:
-        if(!tokenValido) {
-            if(validaIdentificador(token)) {
+
+        // Identificadores:
+        if (!tokenValido) {
+            if (validaIdentificador(token)) {
                 tokenValido = true;
                 setTipoToken("Identificador", b);
             }
         }
-        
-            //Error:
-        if(!tokenValido) {
+
+        // Error:
+        if (!tokenValido) {
             error("el token \"" + token + "\" es inválido para el lenguaje.");
             return "TOKEN INVÁLIDO";
         }
         return token;
     }
-    
+
     public boolean validaIdentificador(String t) {
         boolean tokenValido = false;
         char[] charArray;
         charArray = t.toCharArray();
-        int i=0;
-        
-       //Validación del primer caracter:
-        if((charArray[i]>='a' && charArray[i]<='z') || 
+        int i = 0;
+
+        // Validación del primer caracter:
+        if ((charArray[i] >= 'a' && charArray[i] <= 'z') ||
                 (charArray[i] >= 'A' && charArray[i] <= 'Z') ||
-                (charArray[i]=='_')){ //(charArray[i]=='_') || (charArray[i]=='-')){
+                (charArray[i] == '_')) { // (charArray[i]=='_') || (charArray[i]=='-')){
             tokenValido = true;
         }
-        //Validación del resto del token (si su longitud es mayor a 1):
-        if(t.length() > 1 && tokenValido) {
-            for(int j=1 ; j<charArray.length ; j++) {
-                if((charArray[j]>='a' && charArray[j]<='z') || 
-                (charArray[j] >= 'A' && charArray[j] <= 'Z') ||
-                (charArray[j]=='_') || (charArray[j]=='-') || (charArray[j]>='0' && charArray[j]<='9')){
+        // Validación del resto del token (si su longitud es mayor a 1):
+        if (t.length() > 1 && tokenValido) {
+            for (int j = 1; j < charArray.length; j++) {
+                if ((charArray[j] >= 'a' && charArray[j] <= 'z') ||
+                        (charArray[j] >= 'A' && charArray[j] <= 'Z') ||
+                        (charArray[j] == '_') || (charArray[j] == '-')
+                        || (charArray[j] >= '0' && charArray[j] <= '9')) {
                     tokenValido = true;
                 }
             }
-        }
-        else if(t.length() > 1 && tokenValido) {
+        } else if (t.length() > 1 && tokenValido) {
             tokenValido = false;
         }
         return tokenValido;
     }
-    
+
     public void setTipoToken(String tipo, boolean b) {
-        if(b) {
+        if (b) {
             tipoToken = tipo;
         }
     }
-       
+
     public String getTipoToken() {
         return tipoToken;
     }
-    
+
     public String checkNextToken() {
         return tokens[k];
     }
-    
+
     public void error(String error) {
-        switch(JOptionPane.showConfirmDialog(null,
+        String mensaje = "Error léxico: " + error + ".\n";
+        System.out.println(mensaje);
+        switch (JOptionPane.showConfirmDialog(null,
                 "Error léxico: " + error + ".\n"
                         + "¿Desea detener la ejecución?",
                 "Ha ocurrido un error",
@@ -136,10 +144,28 @@ public class Scanner {
             case JOptionPane.NO_OPTION:
                 double e = 1.1;
                 break;
-                    
+
             case JOptionPane.YES_OPTION:
                 System.exit(0);
                 break;
         }
+    }
+
+    // Mejora 5: Mandar como mensaje lo de "Parte extra del programa encontrada".
+    // Agregamos dos metodos para que el parser pueda verificar si hay tokens extra
+    // al final del programa.
+    public boolean finArchivo() {
+        return k >= tokens.length;
+    }
+
+    public String codigoRestante() {
+
+        String restante = "";
+
+        for (int i = k; i < tokens.length; i++) {
+            restante += tokens[i] + " ";
+        }
+
+        return restante.trim();
     }
 }
