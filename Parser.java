@@ -14,7 +14,7 @@ public class Parser {
     private Vector tablaSimbolos = new Vector();
     private final Scanner s;
     final int ifx=1, thenx=2, elsex=3, beginx=4, endx=5, printx=6, semi=7,
-            sum=8, igual=9, igualdad=10, intx=11, floatx=12, id=13;
+            sum=8, resta=9, multip = 10, divi=11, igual=12, igualdad=13, intx=14, floatx=15, longx=16, doublex=17, id=18;
     private int tknCode, tokenEsperado;
     private String token, tokenActual, log;
     
@@ -56,7 +56,6 @@ public class Parser {
             advance();
         }
         else{
-            //cambiamos para que muestre el nombre del token en vez de token:2
             error(token, nombreToken(t));
         }
     }
@@ -66,7 +65,6 @@ public class Parser {
         createTable();
         Statx s = S();
 
-        //Nuevo para la mejora 5: Mandar como mensaje lo de "Parte extra del programa encontrada".
         if(!this.s.finArchivo()){
 
             String mensaje =
@@ -84,13 +82,14 @@ public class Parser {
     }
     
     public Declarax D() {
+        //Mejora 2.1: Agregamos los dos nuevos tipos de datos long y double
       if(tknCode == id) {
-        if(stringToCode(s.getToken(false)) == intx || stringToCode(s.getToken(false)) == floatx) {
+        if(stringToCode(s.getToken(false)) == intx || stringToCode(s.getToken(false)) == floatx 
+            || stringToCode(s.getToken(false)) == longx || stringToCode(s.getToken(false)) == doublex) {
           String s = token;
           eat(id); 
           Typex t = T(); 
           eat(semi); 
-          //Mejora 4: Acomodar bien la tabla de símbolos porque estan alrevez.
           tablaSimbolos.addElement(new Declarax(s, t));
           D();
           return new Declarax(s, t);
@@ -114,8 +113,16 @@ public class Parser {
             eat(floatx);
             return new Typex("float");
         }
+        else if(tknCode == longx) {
+            eat(longx);
+            return new Typex("long");
+        }
+        else if(tknCode == doublex) {
+            eat(doublex);
+            return new Typex("double");
+        }
         else{
-            error(token, "(int / float)");
+            error(token, "(int / float / long / double)");
             return null;
         }
     }
@@ -168,47 +175,84 @@ public class Parser {
     }
     
     public Expx E() {
-       Idx i1, i2;
-       String comp1, comp2;
-       
-       if(tknCode == id) {
-           comp1 = token;
-           declarationCheck(token);
-           eat(id); 
-           i1 = new Idx(token); 
-           switch(stringToCode(token)) {
-               
-               case sum:  
-                   comp2 = tokenActual;
-                   eat(sum);   eat(id);
-                   i2 = new Idx(comp2); //(tokenActual)
-                   declarationCheck(comp2);
-                   compatibilityCheck(comp1,comp2);
-                   byteCode("suma", comp1, comp2);
-                   System.out.println("Operación: " + comp1 + "+" + comp2);
-                   return new Sumax(i1, i2);
-                   
-               case igualdad:
-                   comp2 = tokenActual;
-                   eat(igualdad);   eat(id);
-                   i2 = new Idx(comp2);
-                   declarationCheck(comp2);
-                   compatibilityCheck(comp1,comp2);
-                   byteCode("igualdad", comp1, comp2);
-                   return new Comparax(i1, i2);
-                   
-               default: 
-                   error(token, "(+ / ==)");
-                   return null;
-           }
-       }
-       else{
-           error(token, "(id)");
-           return null;
-       }
-    } //FIN DEL ANÁLISIS SINTÁCTICO
-    
-    //Mejora 3: Mostrar errores también en consola.
+        Idx i1, i2;
+        String comp1, comp2;
+
+        if (tknCode == id) {
+            comp1 = token;
+            declarationCheck(token);
+            eat(id);
+            i1 = new Idx(token);
+            switch (stringToCode(token)) {
+
+                case sum:
+                    comp2 = tokenActual;
+                    eat(sum);
+                    eat(id);
+                    i2 = new Idx(comp2); // (tokenActual)
+                    declarationCheck(comp2);
+                    compatibilityCheck(comp1, comp2);
+                    byteCode("suma", comp1, comp2);
+                    System.out.println("Operación: " + comp1 + "+" + comp2);
+                    return new Sumax(i1, i2);
+
+                // Mejora 2.3 – Agregar las nuevas clases para los nuevos operadores
+                // Aqui ya se podea hacer las nuevas operaciones de E -> id - id
+                case resta:
+                    comp2 = tokenActual;
+                    eat(resta);
+                    eat(id);
+                    i2 = new Idx(comp2);
+                    declarationCheck(comp2);
+                    compatibilityCheck(comp1, comp2);
+                    byteCode("resta", comp1, comp2);
+                    System.out.println("Operación: " + comp1 + "-" + comp2);
+                    return new Restax(i1, i2);
+
+                // Mejora 2.4 – Agregar operador de multiplicación y la clase Multiplicax
+                    case multip:
+                    comp2 = tokenActual;
+                    eat(multip);
+                    eat(id);
+                    i2 = new Idx(comp2);
+                    declarationCheck(comp2);
+                    compatibilityCheck(comp1, comp2);
+                    byteCode("multiplicacion", comp1, comp2);
+                    System.out.println("Operación: " + comp1 + "*" + comp2);
+                    return new Multiplicax(i1, i2);
+
+                // Mejora 2.5 – Agregar operador de división y la clase
+                case divi:
+                    comp2 = tokenActual;
+                    eat(divi);
+                    eat(id);
+                    i2 = new Idx(comp2);
+                    declarationCheck(comp2);
+                    compatibilityCheck(comp1, comp2);
+                    byteCode("division", comp1, comp2);
+                    System.out.println("Operación: " + comp1 + "/" + comp2);
+                    return new Divisionx(i1, i2);
+
+                case igualdad:
+                    comp2 = tokenActual;
+                    eat(igualdad);
+                    eat(id);
+                    i2 = new Idx(comp2);
+                    declarationCheck(comp2);
+                    compatibilityCheck(comp1, comp2);
+                    byteCode("igualdad", comp1, comp2);
+                    return new Comparax(i1, i2);
+
+                default:
+                    error(token, "(+ / ==)");
+                    return null;
+            }
+        } else {
+            error(token, "(id)");
+            return null;
+        }
+    } // FIN DEL ANÁLISIS SINTÁCTICO
+
     public void error(String token, String t) {
         String mensaje = "Error sintáctico:\n"
                 + "El token:("+ token + ") no concuerda con la gramática del lenguaje,\n"
@@ -243,16 +287,20 @@ public class Parser {
             case "print": codigo=printx; break;
             case ";": codigo=semi; break;
             case "+": codigo=sum; break;
+            case "-": codigo=resta; break;
+            case "*": codigo=multip; break;
+            case "/": codigo=divi; break;
             case ":=": codigo=igual; break;
             case "==": codigo=igualdad; break;
             case "int": codigo=intx; break;
             case "float": codigo=floatx; break;
+            //Mejora 2.1: Agregamos las dos nuevas palabras reservadas
+            case "long": codigo=longx; break;
+            case "double": codigo=doublex; break;
             default: codigo=id; break;
         }
         return codigo;
     }
-    //Mejora 2: Corregir mensajes de error 
-    // (mostrar el nombre del token como lo explico en clase en vez de token:2).
     private String nombreToken(int codigo){
         switch(codigo){
             case ifx:
@@ -271,6 +319,12 @@ public class Parser {
                 return ";";
             case sum:
                 return "+";
+            case resta:
+                return "-"; 
+            case multip:
+                return "*";
+            case divi:
+                return "/";
             case igual:
                 return ":=";
             case igualdad:
@@ -279,6 +333,10 @@ public class Parser {
                 return "int";
             case floatx:
                 return "float";
+            case longx:
+                return "long";
+            case doublex:
+                return "double";
             case id:
                 return "identificador";
             default:
@@ -322,8 +380,8 @@ public class Parser {
             System.out.println(variable[i] + ": "+ tipo[i]); //Imprime tabla de símbolos por consola.
         }
         
-       ArrayUtils.reverse(variable);
-       ArrayUtils.reverse(tipo);
+       //ArrayUtils.reverse(variable);
+       //ArrayUtils.reverse(tipo);
         
         System.out.println("-----------------\n");
     }
@@ -346,20 +404,36 @@ public class Parser {
     }
     
     //Chequeo de tipos consultando la tabla de símbolos
+    // Mejora 2.2 – Compatibilidad entre los tipos
+            //se puede: int - long y float - double
     public void compatibilityCheck(String s1, String s2) {
         Declarax elementoCompara1;
         Declarax elementoCompara2;
         System.out.println("CHECANDO COMPATIBILIDAD ENTRE TIPOS ("+s1+", "+s2+"). ");
         boolean termino = false;
+
         for(int i=0; i<tablaSimbolos.size() ; i++) {
           elementoCompara1 = (Declarax) tablaSimbolos.elementAt(i);
+
           if(s1.equals(elementoCompara1.s1)) {
             System.out.println("Se encontró el primer elemento en la tabla de símbolos...");
+
             for(int j=0; j<tablaSimbolos.size() ; j++) {
               elementoCompara2 = (Declarax) tablaSimbolos.elementAt(j);
               if(s2.equals(elementoCompara2.s1)) {
                 System.out.println("Se encontró el segundo elemento en la tabla de símbolos...");
-                if(tipo[i].equals(tipo[j])) {
+
+                String tipo1 = tipo[i];
+                String tipo2 = tipo[j];
+                System.out.println("Comparando tipos: "+tipo1+" y "+tipo2);
+                boolean compatibles =
+                    tipo1.equals(tipo2) 
+                    || (tipo1.equals("int") && tipo2.equals("long")) 
+                    || (tipo1.equals("long") && tipo2.equals("int"))
+                    || (tipo1.equals("float") && tipo2.equals("double"))
+                    || (tipo1.equals("double") && tipo2.equals("float"));
+
+                if(compatibles) { 
                   termino = true;
                   break;
                 }else{
@@ -378,7 +452,8 @@ public class Parser {
           }
         }
     }
-    
+    //Mejora 2.6 – Actualizamos el bytecode 
+    //https://en.wikipedia.org/wiki/List_of_JVM_bytecode_instructions
     public void byteCode(String tipo, String s1,String s2){
         int pos1=-1, pos2=-1;
         
@@ -403,6 +478,27 @@ public class Parser {
             ipbc(cntIns + ": iload_"+pos1);
             ipbc(cntIns + ": iload_"+pos2);
             ipbc(cntIns + ": iadd");
+            jmp2 = cntBC;
+          break;
+        // Se decidio que todo se guardara como iload, no dependera del tipo de dato, ya que no se esta haciendo operaciones con flotantes.
+          case "resta":
+            ipbc(cntIns + ": iload_"+pos1);
+            ipbc(cntIns + ": iload_"+pos2);
+            ipbc(cntIns + ": isub");
+            jmp2 = cntBC;
+          break;
+
+          case "multiplicacion":
+            ipbc(cntIns + ": iload_"+pos1);
+            ipbc(cntIns + ": iload_"+pos2);
+            ipbc(cntIns + ": imul");
+            jmp2 = cntBC;
+          break;
+
+          case "division":
+            ipbc(cntIns + ": iload_"+pos1);
+            ipbc(cntIns + ": iload_"+pos2);
+            ipbc(cntIns + ": idiv");
             jmp2 = cntBC;
           break;
         }

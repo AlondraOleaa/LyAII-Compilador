@@ -1,0 +1,9 @@
+numero1 long ;
+numero2 int ;
+promedio double ;
+calificacion float ;
+
+if numero2 == numero1 then
+    print numero1 * numero2
+else
+    print promedio / calificacion

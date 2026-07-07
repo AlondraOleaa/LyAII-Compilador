@@ -1,0 +1,6 @@
+numero1 int ;
+numero2 float ;
+
+print numero1 / numero2 ;
+
+codigo extra

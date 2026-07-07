@@ -11,8 +11,10 @@ public class Scanner {
     private final String[] tokens;
     private String tipoToken;
     private String token;
-    private final String[] reservadas = { "if", "then", "else", "begin", "print", "end", "int", "float" };
-    private final String[] operadores = { "==", ":=", "+" };
+    //Mejora 2.1 Agregamos las dos nuevas palabras reservadas
+    private final String[] reservadas = { "if", "then", "else", "begin", "print", "end", "int", "float" , "long", "double"};
+    //Mejora 2.3 – Agregar operadores nuevos
+    private final String[] operadores = { "==", ":=", "+", "-", "*", "/" };
     private final String delimitador = ";";
 
     // main
@@ -150,10 +152,6 @@ public class Scanner {
                 break;
         }
     }
-
-    // Mejora 5: Mandar como mensaje lo de "Parte extra del programa encontrada".
-    // Agregamos dos metodos para que el parser pueda verificar si hay tokens extra
-    // al final del programa.
     public boolean finArchivo() {
         return k >= tokens.length;
     }
