@@ -13,8 +13,9 @@ public class Parser {
     String byteString;
     private Vector tablaSimbolos = new Vector();
     private final Scanner s;
-    final int ifx=1, thenx=2, elsex=3, beginx=4, endx=5, printx=6, semi=7,
-            sum=8, resta=9, multip = 10, divi=11, igual=12, igualdad=13, intx=14, floatx=15, longx=16, doublex=17, id=18;
+    //Mejora 3 - agregamos la palabra reservado DO
+    final int ifx=1, thenx=2, elsex=3,whilex =4, dox=5, beginx=6, endx=7, printx=8, semi=9,
+            sum=10, resta=11, multip = 12, divi=13, igual=14, igualdad=15, intx=16, floatx=17, longx=18, doublex=19, id=20;
     private int tknCode, tokenEsperado;
     private String token, tokenActual, log;
     
@@ -82,7 +83,6 @@ public class Parser {
     }
     
     public Declarax D() {
-        //Mejora 2.1: Agregamos los dos nuevos tipos de datos long y double
       if(tknCode == id) {
         if(stringToCode(s.getToken(false)) == intx || stringToCode(s.getToken(false)) == floatx 
             || stringToCode(s.getToken(false)) == longx || stringToCode(s.getToken(false)) == doublex) {
@@ -155,7 +155,16 @@ public class Parser {
                 Expx ex;
                 eat(printx);    ex=E();
                 return new Printx(ex);
-                
+            //Mejora 3 - Agregamos el nuevo ciclo
+            case whilex:
+                Expx e2;
+                Statx s3;
+                eat(whilex);
+                e2 = E();
+                eat(dox);
+                s3 = S();
+                return new Whilex(e2, s3);
+  
             default: error(token, "(if | begin | id | print)");
                 return null;
         }
@@ -196,8 +205,6 @@ public class Parser {
                     System.out.println("Operación: " + comp1 + "+" + comp2);
                     return new Sumax(i1, i2);
 
-                // Mejora 2.3 – Agregar las nuevas clases para los nuevos operadores
-                // Aqui ya se podea hacer las nuevas operaciones de E -> id - id
                 case resta:
                     comp2 = tokenActual;
                     eat(resta);
@@ -209,7 +216,6 @@ public class Parser {
                     System.out.println("Operación: " + comp1 + "-" + comp2);
                     return new Restax(i1, i2);
 
-                // Mejora 2.4 – Agregar operador de multiplicación y la clase Multiplicax
                     case multip:
                     comp2 = tokenActual;
                     eat(multip);
@@ -221,7 +227,6 @@ public class Parser {
                     System.out.println("Operación: " + comp1 + "*" + comp2);
                     return new Multiplicax(i1, i2);
 
-                // Mejora 2.5 – Agregar operador de división y la clase
                 case divi:
                     comp2 = tokenActual;
                     eat(divi);
@@ -282,6 +287,8 @@ public class Parser {
             case "if": codigo=ifx; break;    
             case "then": codigo=thenx; break;
             case "else": codigo=elsex; break;
+            case "while": codigo=whilex; break;
+            case "do": codigo=dox; break;
             case "begin": codigo=beginx; break;
             case "end": codigo=endx; break;
             case "print": codigo=printx; break;
@@ -294,7 +301,6 @@ public class Parser {
             case "==": codigo=igualdad; break;
             case "int": codigo=intx; break;
             case "float": codigo=floatx; break;
-            //Mejora 2.1: Agregamos las dos nuevas palabras reservadas
             case "long": codigo=longx; break;
             case "double": codigo=doublex; break;
             default: codigo=id; break;
@@ -309,6 +315,10 @@ public class Parser {
                 return "then";
             case elsex:
                 return "else";
+            case whilex:
+                return "while";
+            case dox:
+                return "do";
             case beginx:
                 return "begin";
             case endx:
@@ -404,8 +414,6 @@ public class Parser {
     }
     
     //Chequeo de tipos consultando la tabla de símbolos
-    // Mejora 2.2 – Compatibilidad entre los tipos
-            //se puede: int - long y float - double
     public void compatibilityCheck(String s1, String s2) {
         Declarax elementoCompara1;
         Declarax elementoCompara2;

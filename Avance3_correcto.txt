@@ -1,0 +1,5 @@
+a int ;
+b long ;
+
+while a == b do
+print a * b

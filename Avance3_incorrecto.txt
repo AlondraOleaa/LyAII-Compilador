@@ -1,0 +1,5 @@
+contador int ;
+limite int ;
+
+while contador == limite 
+print contador + contador

@@ -11,9 +11,8 @@ public class Scanner {
     private final String[] tokens;
     private String tipoToken;
     private String token;
-    //Mejora 2.1 Agregamos las dos nuevas palabras reservadas
-    private final String[] reservadas = { "if", "then", "else", "begin", "print", "end", "int", "float" , "long", "double"};
-    //Mejora 2.3 – Agregar operadores nuevos
+    //Mejora 3 - Agregamos la palabra reservada WHILE y DO
+    private final String[] reservadas = { "if", "then", "else", "while", "do", "begin", "print", "end", "int", "float" , "long", "double"};
     private final String[] operadores = { "==", ":=", "+", "-", "*", "/" };
     private final String delimitador = ";";
 
