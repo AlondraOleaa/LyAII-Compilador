@@ -1,0 +1,5 @@
+contador int ;
+
+repeat
+print contador + contador
+contador == contador

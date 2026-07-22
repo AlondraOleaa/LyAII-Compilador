@@ -13,9 +13,8 @@ public class Parser {
     String byteString;
     private Vector tablaSimbolos = new Vector();
     private final Scanner s;
-    //Mejora 3 - agregamos la palabra reservado DO
-    final int ifx=1, thenx=2, elsex=3,whilex =4, dox=5, beginx=6, endx=7, printx=8, semi=9,
-            sum=10, resta=11, multip = 12, divi=13, igual=14, igualdad=15, intx=16, floatx=17, longx=18, doublex=19, id=20;
+    final int ifx=1, thenx=2, elsex=3,whilex =4, dox=5, repeatx=6, untilx=7, beginx=8, endx=9, printx=10, semi=11,
+            sum=12, resta=13, multip = 14, divi=15, igual=16, igualdad=17, intx=18, floatx=19, longx=20, doublex=21, id=22;
     private int tknCode, tokenEsperado;
     private String token, tokenActual, log;
     
@@ -155,15 +154,25 @@ public class Parser {
                 Expx ex;
                 eat(printx);    ex=E();
                 return new Printx(ex);
-            //Mejora 3 - Agregamos el nuevo ciclo
+
             case whilex:
                 Expx e2;
                 Statx s3;
                 eat(whilex);
-                e2 = E();
+                e2 = E(); //primero evalua
                 eat(dox);
-                s3 = S();
+                s3 = S(); //despues ejecuta el cuerpo
                 return new Whilex(e2, s3);
+            
+            //Mejora Final - se agrega el comportamiento de REPEAT y UNTIL
+            case repeatx:
+                Statx s4;
+                Expx e3;
+                eat(repeatx);
+                s4 = S(); //primero ejecuta el cuerpo
+                eat(untilx);
+                e3 = E(); //despues evalua
+                return new Repeatx(s4, e3);
   
             default: error(token, "(if | begin | id | print)");
                 return null;
@@ -289,6 +298,8 @@ public class Parser {
             case "else": codigo=elsex; break;
             case "while": codigo=whilex; break;
             case "do": codigo=dox; break;
+            case "repeat": codigo=repeatx; break;
+            case "until": codigo=untilx; break;
             case "begin": codigo=beginx; break;
             case "end": codigo=endx; break;
             case "print": codigo=printx; break;
@@ -319,6 +330,10 @@ public class Parser {
                 return "while";
             case dox:
                 return "do";
+            case repeatx:
+                return "repeat";
+            case untilx:
+                return "until";
             case beginx:
                 return "begin";
             case endx:
@@ -378,9 +393,9 @@ public class Parser {
         tipo = new String[tablaSimbolos.size()];
         
         //Imprime tabla de símbolos
-        System.out.println("-----------------");
+        System.out.println("---------------------------");
         System.out.println("TABLA DE SÍMBOLOS");
-        System.out.println("-----------------");
+        System.out.println("---------------------------");
         for(int i=0; i<tablaSimbolos.size(); i++) {
             Declarax dx;
             Typex tx;
@@ -393,7 +408,7 @@ public class Parser {
        //ArrayUtils.reverse(variable);
        //ArrayUtils.reverse(tipo);
         
-        System.out.println("-----------------\n");
+        System.out.println("---------------------------\n");
     }
     
     
@@ -460,8 +475,27 @@ public class Parser {
           }
         }
     }
-    //Mejora 2.6 – Actualizamos el bytecode 
-    //https://en.wikipedia.org/wiki/List_of_JVM_bytecode_instructions
+    //Mejora Final – Actualizamos el bytecode 
+    public String obtenerPrefijo(String variable){
+        for(int i=0; i<tablaSimbolos.size(); i++) {
+            Declarax d = (Declarax)tablaSimbolos.elementAt(i);
+            if(d.s1.equals(variable)){
+                switch(d.s2.getTypex()){
+                    case "int":
+                        return "i";
+                    case "float":
+                        return "f";
+                    case "long":
+                        return "l";
+                    case "double":
+                        return "d";
+                }
+            }
+        }
+        return "i";
+    }
+
+    //Cuando dos tipos de datos son diferentes el bytecode se genera usando el tipo de la primera variable esto
     public void byteCode(String tipo, String s1,String s2){
         int pos1=-1, pos2=-1;
         
@@ -473,40 +507,42 @@ public class Parser {
                 pos2 = i;
             }
         }
+        //Mandamos llamar el metodo para obtener el prefijo de la primera variable
+        String prefijo = obtenerPrefijo(s1);
         
         switch(tipo) {
           case "igualdad":
-            ipbc(cntIns + ": iload_"+pos1);
-            ipbc(cntIns + ": iload_"+pos2);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos1);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos2);
             ipbc(cntIns + ": ifne " + (cntIns+4));
             jmp1 = cntBC;
           break;
 
           case "suma":
-            ipbc(cntIns + ": iload_"+pos1);
-            ipbc(cntIns + ": iload_"+pos2);
-            ipbc(cntIns + ": iadd");
+            ipbc(cntIns + ": " + prefijo + "load_"+pos1);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos2);
+            ipbc(cntIns + ": " + prefijo + "add");
             jmp2 = cntBC;
           break;
-        // Se decidio que todo se guardara como iload, no dependera del tipo de dato, ya que no se esta haciendo operaciones con flotantes.
+
           case "resta":
-            ipbc(cntIns + ": iload_"+pos1);
-            ipbc(cntIns + ": iload_"+pos2);
-            ipbc(cntIns + ": isub");
+            ipbc(cntIns + ": " + prefijo + "load_"+pos1);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos2);
+            ipbc(cntIns + ": " + prefijo + "sub");
             jmp2 = cntBC;
           break;
 
           case "multiplicacion":
-            ipbc(cntIns + ": iload_"+pos1);
-            ipbc(cntIns + ": iload_"+pos2);
-            ipbc(cntIns + ": imul");
+            ipbc(cntIns + ": " + prefijo + "load_"+pos1);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos2);
+            ipbc(cntIns + ": " + prefijo + "mul");
             jmp2 = cntBC;
           break;
 
           case "division":
-            ipbc(cntIns + ": iload_"+pos1);
-            ipbc(cntIns + ": iload_"+pos2);
-            ipbc(cntIns + ": idiv");
+            ipbc(cntIns + ": " + prefijo + "load_"+pos1);
+            ipbc(cntIns + ": " + prefijo + "load_"+pos2);
+            ipbc(cntIns + ": " + prefijo + "div");
             jmp2 = cntBC;
           break;
         }
@@ -519,9 +555,10 @@ public class Parser {
                 pos1 = i;
             }
         }
+        String prefijo = obtenerPrefijo(s1);
         switch(tipo) {
             case "igual":
-                pilaBC[cntBC+3] = cntIns+4 + ": istore_" + pos1;
+                pilaBC[cntBC+3] = cntIns+4 + ": " + prefijo + "store_" + pos1;
                 cntIns++;
                 jmp2 = cntBC;
             break;

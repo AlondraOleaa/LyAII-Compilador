@@ -1,0 +1,6 @@
+numero1 float ;
+numero2 float ;
+
+repeat
+numero1 := numero1 + numero2
+until numero1 == numero2

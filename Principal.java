@@ -14,14 +14,14 @@ public class Principal {
             String codigo = Files.readString(archivo.toPath());
             System.out.println("========================= CÓDIGO FUENTE (" + archivo.getName() + ") =========================");
             System.out.println(codigo);
-            System.out.println("========================= FIN CÓDIGO FUENTE =========================");
+            System.out.println("========================= FIN CÓDIGO FUENTE =========================\n");
             
             Parser parser = new Parser(codigo);
 
             //Aqui mejoramos que saliera el bytecode
             System.out.println("\n========================= BYTECODE =========================");
             System.out.println(parser.getBytecode());
-            System.out.println("========================= FIN BYTECODE =========================");
+            System.out.println("========================= FIN BYTECODE =========================\n");
         }else{
             JOptionPane.showMessageDialog(null,"No se seleccionó ningún archivo.");
         }
